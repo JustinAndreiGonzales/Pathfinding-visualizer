@@ -6,7 +6,7 @@ const MainHeader = () => {
     // TODO: toggle to context
     const [isToggled, setIsToggled] = useState(false);
     return (
-        <div className='absolute top-0 left-0 w-full flex items-center justify-between py-3 px-6 inter font-normal text-[14px] text-tertiary bg-white border-b border-brdr-1'>
+        <div className='w-full flex items-center justify-between py-3 px-6 inter font-normal text-[14px] text-tertiary bg-white border-b border-brdr-1'>
             <div className='flex flex-col gap-2'>
                 <span className='text-black font-semibold text-lg'>
                     Grid Visualization

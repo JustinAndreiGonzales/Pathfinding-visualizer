@@ -11,7 +11,10 @@ import { DropdownIcon } from '../icons/DropdownIcon';
 // TODO: statistics data
 const Sidebar = () => {
     return (
-        <div className='overflow-y-auto border-r flex flex-col border-brdr-1 w-[320px] p-6 gap-6 no-scrollbar'>
+        <div
+            className='overflow-y-auto border-r flex flex-col border-brdr-1 w-[320px] p-6 gap-6 no-scrollbar'
+            style={{ height: 'calc(100vh - 64px)' }}
+        >
             {/* Algo Selection */}
             <SidebarGroup header='ALGORITHM'>
                 <AlgorithmControl />
