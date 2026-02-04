@@ -1,13 +1,11 @@
-import type { CellState } from '../../types';
+import { useGridContext } from '../../hooks/useGridContext';
 
-type MazeProps = {
-    size: [number, number];
-    grid: CellState[][];
-};
-
-const Maze = ({ size, grid }: MazeProps) => {
+const Maze = () => {
+    const { maze } = useGridContext();
+    console.log(maze);
+    const [rows, cols] = [maze.length, maze[0].length];
     const gridRowCol = (() => {
-        switch (size[0]) {
+        switch (rows) {
             case 20:
                 return 'grid-cols-40 grid-rows-20';
             case 25:
@@ -23,12 +21,12 @@ const Maze = ({ size, grid }: MazeProps) => {
             <div
                 className={`grid ${gridRowCol} w-4/5 aspect-2/1 max-h-full shadow-2xl rounded-lg border border-brdr-2`}
             >
-                {grid.map((row, i) =>
+                {maze.map((row, i) =>
                     row.map((cell, j) => (
                         <div
                             key={`${i}-${j}`}
                             className={`w-full h-full border border-brdr-1 bg-white cursor-pointer
-                                ${i === 0 && j === 0 ? 'rounded-tl-lg' : i === 0 && j === size[1] - 1 ? 'rounded-tr-lg' : i === size[0] - 1 && j === 0 ? 'rounded-bl-lg' : i === size[0] - 1 && j === size[1] - 1 ? 'rounded-br-lg' : ''}
+                                ${i === 0 && j === 0 ? 'rounded-tl-lg' : i === 0 && j === cols - 1 ? 'rounded-tr-lg' : i === rows - 1 && j === 0 ? 'rounded-bl-lg' : i === rows - 1 && j === cols - 1 ? 'rounded-br-lg' : ''}
                                 `}
                         ></div>
                     ))

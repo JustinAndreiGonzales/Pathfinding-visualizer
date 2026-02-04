@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { DropdownIcon } from '../../icons/DropdownIcon';
 import Toggle from '../simple/Toggle';
+import { useGridContext } from '../../hooks/useGridContext';
 
 const MainHeader = () => {
-    // TODO: toggle to context
     const [isToggled, setIsToggled] = useState(false);
     return (
         <div className='w-full flex items-center justify-between py-3 px-6 inter font-normal text-[14px] text-tertiary bg-white border-b border-brdr-1'>
@@ -33,14 +33,14 @@ const MainHeader = () => {
 
 // TODO: check if can convert to component
 const Dropdown = () => {
-    const algorithms = ['Small (20x40)', 'Medium (25x50)', 'Large (30x60)'];
-    const [currAlgo, setCurrAlgo] = useState('Medium (25x50)');
+    const { gridSizes, currGridSize, setGridSize } = useGridContext();
+
     const [isDropDownShowing, setIsDropDownShowing] = useState(false);
     return (
         <div className='relative w-full cursor-pointer'>
             <div onClick={() => setIsDropDownShowing((prev) => !prev)}>
                 <div className='w-full font-medium text-[16px] rounded-lg p-4 py-2 pr-10 inter text-secondary bg-white border border-brdr-2'>
-                    {currAlgo}
+                    {currGridSize}
                 </div>
                 <div className='absolute flex items-center inset-y-0 right-0 pr-3'>
                     <DropdownIcon className='w-4 h-4 text-gray-500' />
@@ -48,18 +48,18 @@ const Dropdown = () => {
             </div>
             {isDropDownShowing && (
                 <div className='absolute flex flex-col top-[80%] p-4 pb-2 bg-white border border-t-0 border-brdr-2 rounded-b-lg w-full font-medium text-[16px] text-secondary'>
-                    {algorithms
-                        .filter((algo) => algo !== currAlgo)
-                        .map((algo, _) => (
+                    {gridSizes
+                        .filter((size) => size !== currGridSize)
+                        .map((size, _) => (
                             <div
                                 className='cursor-pointer'
-                                key={algo}
+                                key={size}
                                 onClick={() => {
-                                    setCurrAlgo(algo);
+                                    setGridSize(size);
                                     setIsDropDownShowing(false);
                                 }}
                             >
-                                {algo}
+                                {size}
                             </div>
                         ))}
                 </div>
