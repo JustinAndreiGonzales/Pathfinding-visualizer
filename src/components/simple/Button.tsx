@@ -5,9 +5,10 @@ type ButtonProps = {
     type: 'primary' | 'secondary';
     text: string;
     Icon: React.ComponentType<IconProps>;
+    onClick: () => void;
 };
 
-const Button = ({ type, text, Icon }: ButtonProps) => {
+const Button = ({ type, text, Icon, onClick }: ButtonProps) => {
     const { textColor, bgColor, border } =
         type === 'primary'
             ? {
@@ -22,6 +23,7 @@ const Button = ({ type, text, Icon }: ButtonProps) => {
               };
     return (
         <div
+            onClick={onClick}
             className={`flex justify-center items-center w-full gap-2 inter font-medium text-[16px] py-4 rounded-lg ${bgColor} ${border} ${textColor} cursor-pointer`}
         >
             <Icon className='w-5 h-5' />
