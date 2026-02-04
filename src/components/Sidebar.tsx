@@ -7,6 +7,7 @@ import { ResetIcon } from '../icons/ResetIcon';
 import { DiceIcon } from '../icons/DiceIcon';
 import { LayersIcon } from '../icons/LayersIcon';
 import { DropdownIcon } from '../icons/DropdownIcon';
+import { useGridContext } from '../hooks/useGridContext';
 
 // TODO: statistics data
 const Sidebar = () => {
@@ -55,12 +56,9 @@ const SidebarGroup = ({ children, header }: SidebarGroupProps) => {
     );
 };
 
-// TODO: algorithms as props
-// TODO: Update state stuff (prop context)
 // TODO: hover stuff
 const AlgorithmControl = () => {
-    const algorithms = ["Dijkstra's Algorthm", 'A star', 'BFS', 'DFS'];
-    const [currAlgo, setCurrAlgo] = useState("Dijkstra's Algorthm");
+    const { algorithms, currAlgo, setCurrAlgo } = useGridContext();
     const [isDropDownShowing, setIsDropDownShowing] = useState(false);
     return (
         <div className='relative w-full cursor-pointer'>
@@ -107,9 +105,18 @@ const Controls = () => {
 
 // TODO: connect value to smth
 const SpeedControl = () => {
+    const { speed, setSpeed } = useGridContext();
     return (
         <div className='flex flex-col gap-3 items-center justify-center w-full font-normal text-3'>
-            <input type='range' className='slider' />
+            <input
+                type='range'
+                min={1}
+                max={100}
+                step={5}
+                value={speed}
+                onChange={(e) => setSpeed(Number(e.target.value))}
+                className='slider'
+            />
             <div className='flex items-center justify-between w-full'>
                 <p>Slow</p>
                 Fast

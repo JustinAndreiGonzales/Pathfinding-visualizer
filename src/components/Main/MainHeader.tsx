@@ -4,7 +4,7 @@ import Toggle from '../simple/Toggle';
 import { useGridContext } from '../../hooks/useGridContext';
 
 const MainHeader = () => {
-    const [isToggled, setIsToggled] = useState(false);
+    const { isDiagonal, setIsDiagonal } = useGridContext();
     return (
         <div className='w-full flex items-center justify-between py-3 px-6 inter font-normal text-[14px] text-tertiary bg-white border-b border-brdr-1'>
             <div className='flex flex-col gap-2'>
@@ -21,8 +21,8 @@ const MainHeader = () => {
                 </div>
                 <div className='flex items-center justify-center font-medium gap-2'>
                     <Toggle
-                        isToggled={isToggled}
-                        onClick={() => setIsToggled((prev) => !prev)}
+                        isToggled={isDiagonal}
+                        onClick={() => setIsDiagonal((prev) => !prev)}
                     />
                     Diagonal
                 </div>

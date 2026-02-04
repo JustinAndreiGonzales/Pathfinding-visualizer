@@ -10,6 +10,13 @@ type GridContextType = {
     setGridSize: (newGridSize: string) => void;
     maze: CellState[][];
     setMaze: React.Dispatch<React.SetStateAction<CellState[][]>>;
+    isDiagonal: boolean;
+    setIsDiagonal: React.Dispatch<React.SetStateAction<boolean>>;
+    algorithms: string[];
+    currAlgo: string;
+    setCurrAlgo: React.Dispatch<React.SetStateAction<string>>;
+    speed: number;
+    setSpeed: React.Dispatch<React.SetStateAction<number>>;
 };
 
 export const GridContext = createContext<GridContextType | null>(null);
@@ -17,10 +24,17 @@ export const GridContext = createContext<GridContextType | null>(null);
 export const GridProvider = ({ children }: { children: ReactNode }) => {
     // Constants
     const gridSizes = ['Small (20x40)', 'Medium (25x50)', 'Large (30x60)'];
+    const algorithms = ["Dijkstra's Algorthm", 'A star', 'BFS', 'DFS'];
 
     // States
-    const [gridSize, setGridSize] = useState('Medium (25x50)');
+    // Main Header
+    const [gridSize, setGridSize] = useState(gridSizes[1]);
     const [maze, setMaze] = useState(createNewGrid(25, 50));
+    const [isDiagonal, setIsDiagonal] = useState(false);
+
+    // Sidebar
+    const [currAlgo, setCurrAlgo] = useState(algorithms[0]);
+    const [speed, setSpeed] = useState(50);
 
     const handleGridSizeChange = (newGridSize: string) => {
         const newSize = newGridSize.match(/\((\d+)x(\d+)\)/);
@@ -37,6 +51,13 @@ export const GridProvider = ({ children }: { children: ReactNode }) => {
         setGridSize: handleGridSizeChange,
         maze,
         setMaze,
+        isDiagonal,
+        setIsDiagonal,
+        algorithms,
+        currAlgo,
+        setCurrAlgo,
+        speed,
+        setSpeed,
     };
 
     return (
