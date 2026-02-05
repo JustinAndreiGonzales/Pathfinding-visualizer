@@ -33,8 +33,6 @@ export const VisualizerProvider = ({ children }: { children: ReactNode }) => {
         handleGenerateRandomMaze,
         handleRecursiveDivision,
         handleGridOnClick,
-        isMouseDown,
-        setIsMouseDown,
     } = usePathfindingVisualizer(gridSize, isDiagonal, currAlgo, speed);
 
     const gridValues = {
@@ -42,8 +40,6 @@ export const VisualizerProvider = ({ children }: { children: ReactNode }) => {
         rows,
         cols,
         handleGridOnClick,
-        isMouseDown,
-        setIsMouseDown,
     };
     const settingValues = {
         gridSizes,

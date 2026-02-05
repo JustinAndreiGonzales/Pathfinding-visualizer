@@ -10,26 +10,24 @@ export const usePathfindingVisualizer = (
 ) => {
     const [rows, cols] = getGridDimension(currGridSize);
     const [maze, setMaze] = useState(() => createNewGrid(rows, cols));
-    const [hasStart, setHasStart] = useState(false);
-    const [hasEnd, setHasEnd] = useState(false);
-
-    const [isMouseDown, setIsMouseDown] = useState(false);
+    const [, setHasStart] = useState(false);
+    const [, setHasEnd] = useState(false);
 
     const handleGridSizeChange = (newGridSize: string) => {
         const [rows, cols] = getGridDimension(newGridSize);
         setMaze(createNewGrid(rows, cols));
     };
 
-    const handleVisualize = useCallback(() => {
+    const handleVisualize = () => {
         setMaze((prev) => {
             const next = prev.map((row) => row.map((cell) => ({ ...cell })));
             next[10][10].state = 'visited';
             next[10][11].state = 'path';
             return next;
         });
-    }, [currGridSize, isDiagonal, currAlgo, speed]);
+    };
 
-    const handleClearPath = useCallback(() => {
+    const handleClearPath = () => {
         setMaze((prev) => {
             return prev.map((row) =>
                 row.map((cell) =>
@@ -39,9 +37,9 @@ export const usePathfindingVisualizer = (
                 )
             );
         });
-    }, []);
+    };
 
-    const handleClearWalls = useCallback(() => {
+    const handleClearWalls = () => {
         setMaze((prev) => {
             return prev.map((row) =>
                 row.map((cell) =>
@@ -51,42 +49,67 @@ export const usePathfindingVisualizer = (
                 )
             );
         });
-    }, []);
+    };
 
-    const handleResetBoard = useCallback(() => {
+    const handleResetBoard = () => {
         handleGridSizeChange(currGridSize);
         setHasEnd(false);
         setHasStart(false);
-    }, [currGridSize]);
-
-    const handleGenerateRandomMaze = useCallback(() => {}, []);
-    const handleRecursiveDivision = useCallback(() => {}, []);
-
-    // better hover onclick (better UX)
-    const handleGridOnClick = (row: number, col: number) => {
-        setMaze((prev) => {
-            const next = prev.map((row) => row.map((cell) => ({ ...cell })));
-            const cellState = next[row][col].state;
-            if (cellState == 'end') {
-                setHasEnd(false);
-                next[row][col].state = 'unvisited';
-            } else if (cellState == 'start') {
-                setHasStart(false);
-                next[row][col].state = 'unvisited';
-            } else if (!hasStart) {
-                next[row][col].state = 'start';
-                setHasStart(true);
-            } else if (!hasEnd) {
-                next[row][col].state = 'end';
-                setHasEnd(true);
-            } else if (cellState == 'wall') {
-                next[row][col].state = 'unvisited';
-            } else {
-                next[row][col].state = 'wall';
-            }
-            return next;
-        });
     };
+
+    const handleGenerateRandomMaze = () => {};
+    const handleRecursiveDivision = () => {};
+
+    const handleGridOnClick = useCallback(
+        (row: number, col: number) => {
+            setMaze((prevMaze) => {
+                const next = prevMaze.map((r) => r.map((c) => ({ ...c })));
+                const cell = next[row][col];
+
+                // Start cell clicked: reset to unvisited, free start
+                if (cell.state === 'start') {
+                    cell.state = 'unvisited';
+                    setHasStart(false);
+                    return next;
+                }
+
+                // End cell clicked: reset to unvisited, free end
+                if (cell.state === 'end') {
+                    cell.state = 'unvisited';
+                    setHasEnd(false);
+                    return next;
+                }
+
+                // Place start if none exists
+                setHasStart((prevStart) => {
+                    if (!prevStart) {
+                        cell.state = 'start';
+                        return true;
+                    }
+                    return prevStart;
+                });
+
+                // Place end if start exists but no end
+                setHasEnd((prevEnd) => {
+                    if (!prevEnd && cell.state !== 'start') {
+                        cell.state = 'end';
+                        return true;
+                    }
+                    return prevEnd;
+                });
+
+                // Toggle walls if cell is unvisited/wall
+                if (cell.state === 'unvisited') {
+                    cell.state = 'wall';
+                } else if (cell.state === 'wall') {
+                    cell.state = 'unvisited';
+                }
+
+                return next;
+            });
+        },
+        [setMaze]
+    );
 
     useEffect(() => {
         handleGridSizeChange(currGridSize);
@@ -103,7 +126,5 @@ export const usePathfindingVisualizer = (
         handleGenerateRandomMaze,
         handleRecursiveDivision,
         handleGridOnClick,
-        isMouseDown,
-        setIsMouseDown,
     };
 };

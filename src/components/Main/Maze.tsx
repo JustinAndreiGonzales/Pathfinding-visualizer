@@ -1,9 +1,12 @@
+import React, { useRef } from 'react';
 import { useGridContext } from '../../hooks/useGridContext';
-import type { CellState } from '../../types';
+import type { CellState, CellType } from '../../types';
 
 const Maze = () => {
-    const { maze, rows, cols, handleGridOnClick, isMouseDown, setIsMouseDown } =
-        useGridContext();
+    const { maze, rows, cols, handleGridOnClick } = useGridContext();
+
+    const isMouseDownRef = useRef(false);
+
     const gridRowCol = (() => {
         switch (rows) {
             case 20:
@@ -16,24 +19,7 @@ const Maze = () => {
                 return '';
         }
     })();
-    const cellColor = (state: CellState) => {
-        switch (state) {
-            case 'start':
-                return 'bg-start';
-            case 'end':
-                return 'bg-end';
-            case 'path':
-                return 'bg-path';
-            case 'unvisited':
-                return 'bg-white';
-            case 'visited':
-                return 'bg-visited';
-            case 'wall':
-                return 'bg-wall';
-            default:
-                throw new Error('State not found');
-        }
-    };
+
     return (
         <div className='flex w-full h-full justify-center items-center rounded-2xl'>
             <div
@@ -41,25 +27,72 @@ const Maze = () => {
             >
                 {maze.map((row, i) =>
                     row.map((node, j) => (
-                        <div
-                            onMouseDown={() => {
-                                setIsMouseDown(true);
-                                handleGridOnClick(i, j);
-                            }}
-                            onMouseEnter={() => {
-                                if (isMouseDown) handleGridOnClick(i, j);
-                            }}
-                            onMouseUp={() => setIsMouseDown(false)}
+                        <Cell
                             key={`${i}-${j}`}
-                            className={`w-full h-full border border-brdr-1 cursor-pointer
-                                ${i === 0 && j === 0 ? 'rounded-tl-lg' : i === 0 && j === cols - 1 ? 'rounded-tr-lg' : i === rows - 1 && j === 0 ? 'rounded-bl-lg' : i === rows - 1 && j === cols - 1 ? 'rounded-br-lg' : ''}
-                                ${cellColor(node.state)}`}
-                        ></div>
+                            i={i}
+                            j={j}
+                            cols={cols}
+                            rows={rows}
+                            node={node}
+                            onClick={handleGridOnClick}
+                            isMouseDownRef={isMouseDownRef}
+                        />
                     ))
                 )}
             </div>
         </div>
     );
 };
+
+type CellProps = {
+    i: number;
+    j: number;
+    cols: number;
+    rows: number;
+    node: CellType;
+    onClick: (row: number, col: number) => void;
+    isMouseDownRef: React.RefObject<boolean>;
+};
+
+const Cell = React.memo(
+    ({ i, j, cols, rows, node, onClick, isMouseDownRef }: CellProps) => {
+        const cellColor = (state: CellState) => {
+            switch (state) {
+                case 'start':
+                    return 'bg-start';
+                case 'end':
+                    return 'bg-end';
+                case 'path':
+                    return 'bg-path';
+                case 'unvisited':
+                    return 'bg-white';
+                case 'visited':
+                    return 'bg-visited';
+                case 'wall':
+                    return 'bg-wall';
+                default:
+                    throw new Error('State not found');
+            }
+        };
+        return (
+            <div
+                onMouseDown={() => {
+                    isMouseDownRef.current = true;
+                    onClick(i, j);
+                }}
+                onMouseEnter={() => {
+                    if (isMouseDownRef.current) onClick(i, j);
+                }}
+                onMouseUp={() => (isMouseDownRef.current = false)}
+                className={`w-full h-full border border-brdr-1 cursor-pointer
+                                ${i === 0 && j === 0 ? 'rounded-tl-lg' : i === 0 && j === cols - 1 ? 'rounded-tr-lg' : i === rows - 1 && j === 0 ? 'rounded-bl-lg' : i === rows - 1 && j === cols - 1 ? 'rounded-br-lg' : ''}
+                                ${cellColor(node.state)}`}
+            ></div>
+        );
+    },
+    (prev, next) => {
+        return prev.node.state === next.node.state;
+    }
+);
 
 export default Maze;
