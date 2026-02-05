@@ -11,5 +11,7 @@ export type CellState =
     | 'path';
 
 export type CellType = {
+    row: number;
+    col: number;
     state: CellState;
 };

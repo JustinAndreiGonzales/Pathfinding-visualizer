@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { createNewGrid } from '../utilities/createNewGrid';
 import { getGridDimension } from '../utilities/getGridDimension';
+import { dijkstra } from '../algorithms/dijkstra';
 
 export const usePathfindingVisualizer = (
     currGridSize: string,
@@ -10,8 +11,16 @@ export const usePathfindingVisualizer = (
 ) => {
     const [rows, cols] = getGridDimension(currGridSize);
     const [maze, setMaze] = useState(() => createNewGrid(rows, cols));
-    const [, setHasStart] = useState(false);
-    const [, setHasEnd] = useState(false);
+    const [startCell, setStartCell] = useState<{
+        row: number;
+        col: number;
+    } | null>(null);
+    const [_, setEndCell] = useState<{
+        row: number;
+        col: number;
+    } | null>(null);
+    // const [, setHasStart] = useState(false);
+    // const [, setHasEnd] = useState(false);
 
     const handleGridSizeChange = (newGridSize: string) => {
         const [rows, cols] = getGridDimension(newGridSize);
@@ -19,12 +28,15 @@ export const usePathfindingVisualizer = (
     };
 
     const handleVisualize = () => {
-        setMaze((prev) => {
-            const next = prev.map((row) => row.map((cell) => ({ ...cell })));
-            next[10][10].state = 'visited';
-            next[10][11].state = 'path';
-            return next;
-        });
+        const res = dijkstra(maze, { ...startCell!, state: 'start' });
+        console.log(res);
+
+        // setMaze((prev) => {
+        //     const next = prev.map((row) => row.map((cell) => ({ ...cell })));
+        //     next[10][10].state = 'visited';
+        //     next[10][11].state = 'path';
+        //     return next;
+        // });
     };
 
     const handleClearPath = () => {
@@ -53,8 +65,10 @@ export const usePathfindingVisualizer = (
 
     const handleResetBoard = () => {
         handleGridSizeChange(currGridSize);
-        setHasEnd(false);
-        setHasStart(false);
+        // setHasEnd(false);
+        // setHasStart(false);
+        setStartCell(null);
+        setEndCell(null);
     };
 
     const handleGenerateRandomMaze = () => {};
@@ -69,31 +83,48 @@ export const usePathfindingVisualizer = (
                 // Start cell clicked: reset to unvisited, free start
                 if (cell.state === 'start') {
                     cell.state = 'unvisited';
-                    setHasStart(false);
+                    // setHasStart(false);
+                    setStartCell(null);
                     return next;
                 }
 
                 // End cell clicked: reset to unvisited, free end
                 if (cell.state === 'end') {
                     cell.state = 'unvisited';
-                    setHasEnd(false);
+                    // setHasEnd(false);
+                    setEndCell(null);
                     return next;
                 }
 
                 // Place start if none exists
-                setHasStart((prevStart) => {
+                // setHasStart((prevStart) => {
+                //     if (!prevStart) {
+                //         cell.state = 'start';
+                //         return true;
+                //     }
+                //     return prevStart;
+                // });
+
+                setStartCell((prevStart) => {
                     if (!prevStart) {
                         cell.state = 'start';
-                        return true;
+                        return { row, col };
                     }
                     return prevStart;
                 });
 
                 // Place end if start exists but no end
-                setHasEnd((prevEnd) => {
+                // setHasEnd((prevEnd) => {
+                //     if (!prevEnd && cell.state !== 'start') {
+                //         cell.state = 'end';
+                //         return true;
+                //     }
+                //     return prevEnd;
+                // });
+                setEndCell((prevEnd) => {
                     if (!prevEnd && cell.state !== 'start') {
                         cell.state = 'end';
-                        return true;
+                        return { row, col };
                     }
                     return prevEnd;
                 });
