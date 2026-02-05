@@ -7,15 +7,13 @@ import { ResetIcon } from '../icons/ResetIcon';
 import { DiceIcon } from '../icons/DiceIcon';
 import { LayersIcon } from '../icons/LayersIcon';
 import { DropdownIcon } from '../icons/DropdownIcon';
-import { useGridContext } from '../hooks/useGridContext';
+import { useSettingsContext } from '../hooks/useSettingsContext';
+import { useControlsContext } from '../hooks/useControlsContext';
 
 // TODO: statistics data
 const Sidebar = () => {
     return (
-        <div
-            className='overflow-y-auto border-r flex flex-col border-brdr-1 w-[320px] p-6 gap-6 no-scrollbar'
-            style={{ height: 'calc(100vh - 64px)' }}
-        >
+        <div className='overflow-y-auto border-r flex flex-col border-brdr-1 p-6 gap-6 no-scrollbar'>
             {/* Algo Selection */}
             <SidebarGroup header='ALGORITHM'>
                 <AlgorithmControl />
@@ -58,7 +56,7 @@ const SidebarGroup = ({ children, header }: SidebarGroupProps) => {
 
 // TODO: hover stuff
 const AlgorithmControl = () => {
-    const { algorithms, currAlgo, setCurrAlgo } = useGridContext();
+    const { algorithms, currAlgo, setCurrAlgo } = useSettingsContext();
     const [isDropDownShowing, setIsDropDownShowing] = useState(false);
     return (
         <div className='relative w-full cursor-pointer'>
@@ -93,19 +91,44 @@ const AlgorithmControl = () => {
 };
 
 const Controls = () => {
+    const {
+        handleVisualize,
+        handleClearPath,
+        handleClearWalls,
+        handleResetBoard,
+    } = useControlsContext();
     return (
         <div className='flex flex-col gap-3 items-center justify-center'>
-            <Button type='primary' text='Visualize Algorithm' Icon={PlayIcon} />
-            <Button type='secondary' text='Clear Path' Icon={EraserIcon} />
-            <Button type='secondary' text='Clear Walls' Icon={TrashcanIcon} />
-            <Button type='secondary' text='Reset Board' Icon={ResetIcon} />
+            <Button
+                type='primary'
+                text='Visualize Algorithm'
+                Icon={PlayIcon}
+                onClick={handleVisualize}
+            />
+            <Button
+                type='secondary'
+                text='Clear Path'
+                Icon={EraserIcon}
+                onClick={handleClearPath}
+            />
+            <Button
+                type='secondary'
+                text='Clear Walls'
+                Icon={TrashcanIcon}
+                onClick={handleClearWalls}
+            />
+            <Button
+                type='secondary'
+                text='Reset Board'
+                Icon={ResetIcon}
+                onClick={handleResetBoard}
+            />
         </div>
     );
 };
 
-// TODO: connect value to smth
 const SpeedControl = () => {
-    const { speed, setSpeed } = useGridContext();
+    const { speed, setSpeed } = useControlsContext();
     return (
         <div className='flex flex-col gap-3 items-center justify-center w-full font-normal text-3'>
             <input
@@ -126,17 +149,21 @@ const SpeedControl = () => {
 };
 
 const MazePatterns = () => {
+    const { handleGenerateRandomMaze, handleRecursiveDivision } =
+        useControlsContext();
     return (
         <div className='flex flex-col gap-3 items-center justify-center'>
             <Button
                 type='secondary'
                 text='Generate Random Maze'
                 Icon={DiceIcon}
+                onClick={handleGenerateRandomMaze}
             />
             <Button
                 type='secondary'
                 text='Recursive Division'
                 Icon={LayersIcon}
+                onClick={handleRecursiveDivision}
             />
         </div>
     );

@@ -9,3 +9,7 @@ export type CellState =
     | 'end'
     | 'wall'
     | 'path';
+
+export type CellType = {
+    state: CellState;
+};

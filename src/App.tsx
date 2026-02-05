@@ -1,13 +1,11 @@
 import Header from './components/Header';
-import Main from './components/Main/Main';
-import Sidebar from './components/Sidebar';
+import Layout from './components/Layout';
 
 function App() {
     return (
-        <div className='h-screen grid grid-cols-[320px_1fr] grid-rows-[64px_1fr]'>
+        <div className='h-screen grid grid-rows-[64px_1fr]'>
             <Header />
-            <Sidebar />
-            <Main />
+            <Layout />
         </div>
     );
 }

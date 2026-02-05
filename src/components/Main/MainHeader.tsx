@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { DropdownIcon } from '../../icons/DropdownIcon';
 import Toggle from '../simple/Toggle';
-import { useGridContext } from '../../hooks/useGridContext';
+import { useSettingsContext } from '../../hooks/useSettingsContext';
 
 const MainHeader = () => {
-    const { isDiagonal, setIsDiagonal } = useGridContext();
+    const { isDiagonal, setIsDiagonal } = useSettingsContext();
     return (
         <div className='w-full flex items-center justify-between py-3 px-6 inter font-normal text-[14px] text-tertiary bg-white border-b border-brdr-1'>
             <div className='flex flex-col gap-2'>
@@ -33,7 +33,7 @@ const MainHeader = () => {
 
 // TODO: check if can convert to component
 const Dropdown = () => {
-    const { gridSizes, currGridSize, setGridSize } = useGridContext();
+    const { gridSizes, currGridSize, setGridSize } = useSettingsContext();
 
     const [isDropDownShowing, setIsDropDownShowing] = useState(false);
     return (

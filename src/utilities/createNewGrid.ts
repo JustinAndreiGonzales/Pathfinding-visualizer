@@ -1,7 +1,10 @@
-import type { CellState } from '../types';
+import type { CellState, CellType } from '../types';
 
-export const createNewGrid = (x: number, y: number) => {
+export const createNewGrid = (x: number, y: number): CellType[][] => {
     return Array.from({ length: x }, () =>
-        Array.from({ length: y }, () => 'unvisited' as CellState)
+        Array.from(
+            { length: y },
+            () => ({ state: 'unvisited' as CellState }) as CellType
+        )
     );
 };
