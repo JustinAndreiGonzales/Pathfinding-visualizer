@@ -45,7 +45,7 @@ class MinHeap<T> {
             this.compare(
                 this.heap[index],
                 this.heap[this.getParentIndex(index)]
-            )
+            ) < 0
         ) {
             this.swap(index, this.getParentIndex(index));
             index = this.getParentIndex(index);
@@ -103,26 +103,79 @@ class MinHeap<T> {
     }
 }
 
-const indexToObject = (i: number, j: number) => {
-    return { i: i, j: j };
+const indexToObject = (i: number, j: number, dist: number) => {
+    return { i, j, dist };
 };
 
 const getNeighbors = (
+    graph: Graph,
     index: { i: number; j: number },
     rows: number,
     cols: number
 ) => {
     let neighbors = [];
-    if (index.j + 1 < cols) neighbors.push({ i: index.i, j: index.j + 1 }); // right
-    if (index.i + 1 < rows) neighbors.push({ i: index.i + 1, j: index.j }); // bot
-    if (index.j - 1 >= 0) neighbors.push({ i: index.i, j: index.j - 1 }); // left
-    if (index.i - 1 >= 0) neighbors.push({ i: index.i - 1, j: index.j }); // top
+    if (index.j + 1 < cols && graph[index.i][index.j + 1].state !== 'wall')
+        neighbors.push({ i: index.i, j: index.j + 1 }); // right
+    if (index.i + 1 < rows && graph[index.i + 1][index.j].state !== 'wall')
+        neighbors.push({ i: index.i + 1, j: index.j }); // bot
+    if (index.j - 1 >= 0 && graph[index.i][index.j - 1].state !== 'wall')
+        neighbors.push({ i: index.i, j: index.j - 1 }); // left
+    if (index.i - 1 >= 0 && graph[index.i - 1][index.j].state !== 'wall')
+        neighbors.push({ i: index.i - 1, j: index.j }); // top
     return neighbors;
 };
 
-export const dijkstra = (graph: Graph, start: CellType) => {
+const getPrevCell = (
+    cellData: CellData[][],
+    cell: { i: number; j: number }
+) => {
+    const prev = cellData[cell.i][cell.j].prev;
+    if (prev === null) return null;
+    return { i: prev.i, j: prev.j };
+};
+
+export const useDijkstra = (graph: Graph, start: CellType, end: CellType) => {
     const [rows, cols] = [graph.length, graph[0].length];
-    let cellData = Array.from({ length: rows }, () =>
+
+    const { cellData, cellsVisited } = dijkstra(graph, start, rows, cols);
+    const path = reconstructPath(graph, cellData, end);
+
+    return { cellsVisited, path };
+};
+
+const cellTypeToIndex = (cellType: CellType) => {
+    return { i: cellType.row, j: cellType.col };
+};
+
+const reconstructPath = (
+    nextGrid: Graph,
+    prev: CellData[][],
+    end: CellType
+) => {
+    const path: { i: number; j: number }[] = [];
+    let current: { i: number; j: number } | null = cellTypeToIndex(end);
+    while (current !== null) {
+        path.push(current);
+        current = getPrevCell(prev, current);
+    }
+
+    path.reverse();
+
+    if (nextGrid[path[0].i][path[0].j].state === 'start') {
+        return path;
+    } else {
+        throw new Error('path not found');
+    }
+};
+
+const dijkstra = (
+    graph: Graph,
+    start: CellType,
+    rows: number,
+    cols: number
+) => {
+    const cellsVisited = [];
+    const cellData = Array.from({ length: rows }, () =>
         Array.from(
             { length: cols },
             () => ({ dist: Infinity, prev: null, isVisited: false }) as CellData
@@ -131,27 +184,36 @@ export const dijkstra = (graph: Graph, start: CellType) => {
 
     cellData[start.row][start.col].dist = 0;
 
-    const pq = new MinHeap<{ i: number; j: number }>(
-        (a, b) => cellData[a.i][a.j].dist - cellData[b.i][b.j].dist
+    const pq = new MinHeap<{ i: number; j: number; dist: number }>(
+        (a, b) => a.dist - b.dist
     );
 
-    pq.insert(indexToObject(start.row, start.col));
+    pq.insert(
+        indexToObject(start.row, start.col, cellData[start.row][start.col].dist)
+    );
 
     while (!pq.isEmpty()) {
-        let u = pq.extractMin()!;
+        let u = pq.extractMin();
+        if (!u) break;
+
         if (cellData[u.i][u.j].isVisited) continue;
         cellData[u.i][u.j].isVisited = true;
+        cellsVisited.push({ i: u.i, j: u.j });
 
-        const neighbors = getNeighbors(u, rows, cols);
+        if (graph[u.i][u.j].state === 'end') break;
+
+        const neighbors = getNeighbors(graph, u, rows, cols);
         neighbors.forEach((v) => {
+            if (cellData[v.i][v.j].isVisited) return;
+
             const alt = cellData[u.i][u.j].dist + 1;
-            console.log(alt, cellData[v.i][v.j].dist);
             if (alt < cellData[v.i][v.j].dist) {
                 cellData[v.i][v.j].dist = alt;
                 cellData[v.i][v.j].prev = u;
-                pq.insert(indexToObject(v.i, v.j));
+                pq.insert(indexToObject(v.i, v.j, alt));
             }
         });
     }
-    return cellData;
+
+    return { cellData, cellsVisited };
 };
