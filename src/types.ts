@@ -1,17 +1,19 @@
 export type IconProps = {
-    className?: string;
+	className?: string;
 };
 
 export type CellState =
-    | 'unvisited'
-    | 'visited'
-    | 'start'
-    | 'end'
-    | 'wall'
-    | 'path';
+	| "unvisited"
+	| "visited"
+	| "start"
+	| "end"
+	| "wall"
+	| "path";
 
 export type CellType = {
-    row: number;
-    col: number;
-    state: CellState;
+	row: number;
+	col: number;
+	state: CellState;
 };
+
+export type CellIndex = { row: number; col: number };
