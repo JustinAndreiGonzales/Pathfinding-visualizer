@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createNewGrid } from "../utilities/createNewGrid";
 import { getGridDimension } from "../utilities/getGridDimension";
-import { useDijkstra } from "../algorithms/dijkstra";
+import { useDijkstra } from "../algorithms/pathfinding/dijkstra";
 import type { CellIndex, CellType } from "../types";
+import { primMazeGenerator } from "../algorithms/mazeGenerator/prims";
 
 export const usePathfindingVisualizer = (
 	currGridSize: string,
@@ -11,7 +12,9 @@ export const usePathfindingVisualizer = (
 	speed: number,
 ) => {
 	const [rows, cols] = getGridDimension(currGridSize);
-	const [maze, setMaze] = useState(() => createNewGrid(rows, cols));
+	const [maze, setMaze] = useState(() =>
+		createNewGrid(rows, cols, "unvisited"),
+	);
 	const [startCell, setStartCell] = useState<CellType | null>(null);
 	const [endCell, setEndCell] = useState<CellType | null>(null);
 
@@ -19,7 +22,7 @@ export const usePathfindingVisualizer = (
 
 	const handleGridSizeChange = (newGridSize: string) => {
 		const [rows, cols] = getGridDimension(newGridSize);
-		setMaze(createNewGrid(rows, cols));
+		setMaze(createNewGrid(rows, cols, "unvisited"));
 	};
 
 	const sleep = (ms: number) =>
@@ -42,6 +45,19 @@ export const usePathfindingVisualizer = (
 				if (cell.state === "start" || cell.state === "end") return prev;
 				const next = prev.map((r) => r.map((c) => ({ ...c })));
 				next[node.row][node.col].state = "path";
+				return next;
+			});
+			await sleep(100 - speedRef.current);
+		}
+	};
+
+	const animateMazeGeneration = async (paths: CellIndex[]) => {
+		setMaze(createNewGrid(rows, cols, "wall"));
+
+		for (const { row, col } of paths) {
+			setMaze((prev) => {
+				const next = prev.map((r) => r.map((c) => ({ ...c })));
+				next[row][col].state = "unvisited";
 				return next;
 			});
 			await sleep(100 - speedRef.current);
@@ -91,7 +107,10 @@ export const usePathfindingVisualizer = (
 		setEndCell(null);
 	};
 
-	const handleGenerateRandomMaze = () => {};
+	const handleGenerateRandomMaze = () => {
+		const path = primMazeGenerator(rows, cols, isDiagonal);
+		animateMazeGeneration(path);
+	};
 	const handleRecursiveDivision = () => {};
 
 	const handleGridOnClick = useCallback(

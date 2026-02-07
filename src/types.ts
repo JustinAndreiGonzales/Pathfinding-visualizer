@@ -2,6 +2,8 @@ export type IconProps = {
 	className?: string;
 };
 
+export type Graph = CellType[][];
+
 export type CellState =
 	| "unvisited"
 	| "visited"

@@ -1,7 +1,6 @@
-import type { CellIndex, CellType } from "../types";
-import { MinHeap } from "./minheap";
-
-type Graph = CellType[][];
+import type { CellIndex, CellType, Graph } from "../../types";
+import { getNeighbors } from "../algo_utils";
+import { MinHeap } from "../minheap";
 
 type CellData = {
 	row: number;
@@ -9,53 +8,6 @@ type CellData = {
 	dist: number;
 	prev: CellIndex | null;
 	isVisited: boolean;
-};
-
-const getNeighbors = (
-	graph: Graph,
-	cell: CellData,
-	rows: number,
-	cols: number,
-	isDiagonal: boolean,
-) => {
-	const neighbors = [];
-	const row = cell.row;
-	const col = cell.col;
-	if (col + 1 < cols && graph[row][col + 1].state !== "wall")
-		neighbors.push(graph[row][col + 1]); // right
-	if (row + 1 < rows && graph[row + 1][col].state !== "wall")
-		neighbors.push(graph[row + 1][col]); // bot
-	if (col - 1 >= 0 && graph[row][col - 1].state !== "wall")
-		neighbors.push(graph[row][col - 1]); // left
-	if (row - 1 >= 0 && graph[row - 1][col].state !== "wall")
-		neighbors.push(graph[row - 1][col]); // top
-	if (!isDiagonal) return neighbors;
-
-	if (
-		row - 1 >= 0 &&
-		col - 1 >= 0 &&
-		graph[row - 1][col - 1].state !== "wall"
-	)
-		neighbors.push(graph[row - 1][col - 1]); // top left
-	if (
-		row - 1 >= 0 &&
-		col + 1 < cols &&
-		graph[row - 1][col + 1].state !== "wall"
-	)
-		neighbors.push(graph[row - 1][col + 1]); // top right
-	if (
-		row + 1 < rows &&
-		col - 1 >= 0 &&
-		graph[row + 1][col - 1].state !== "wall"
-	)
-		neighbors.push(graph[row + 1][col - 1]); // bot left
-	if (
-		row + 1 < rows &&
-		col + 1 < cols &&
-		graph[row + 1][col + 1].state !== "wall"
-	)
-		neighbors.push(graph[row + 1][col + 1]); // bot right
-	return neighbors;
 };
 
 const getPrevCell = (cellData: CellData[][], cell: CellIndex) => {
@@ -153,7 +105,13 @@ const dijkstra = (
 
 		if (graph[row][col].state === "end") break;
 
-		const neighbors = getNeighbors(graph, u, rows, cols, isDiagonal);
+		const neighbors = getNeighbors<CellData>(
+			graph,
+			u,
+			rows,
+			cols,
+			isDiagonal,
+		).filter((neighbor) => neighbor.state !== "wall");
 		neighbors.forEach((v) => {
 			const nrow = v.row;
 			const ncol = v.col;
