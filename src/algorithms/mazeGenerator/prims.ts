@@ -1,59 +1,68 @@
-import type { CellIndex, CellType } from "../../types";
-import { createNewGrid } from "../../utilities/createNewGrid";
-import { getNeighbors } from "../algo_utils";
+import type { CellIndex, CellType } from '../../types';
+import { createNewGrid } from '../../utilities/createNewGrid';
+import { getRandomOdd, isInBounds, longDirections } from '../algo_utils';
 
-export const getRandomIndex = (rows: number, cols: number) => {
-	const row = Math.floor(Math.random() * rows);
-	const col = Math.floor(Math.random() * cols);
-	return { row, col };
-};
+export const primMazeGenerator = (rows: number, cols: number) => {
+    const wallCreation: CellIndex[] = [];
+    const newGrid = createNewGrid(rows, cols, 'wall');
 
-export const primMazeGenerator = (
-	rows: number,
-	cols: number,
-	isDiagonal: boolean,
-) => {
-	const wallCreation: CellIndex[] = [];
-	const newGrid = createNewGrid(rows, cols, "wall");
+    const row = getRandomOdd(rows);
+    const col = getRandomOdd(cols);
 
-	const { row, col } = getRandomIndex(rows, cols);
+    const start = newGrid[row][col];
+    start.state = 'unvisited';
+    wallCreation.push({ row, col });
 
-	const start = newGrid[row][col];
-	start.state = "unvisited";
-	wallCreation.push({ row, col });
+    const frontier: CellType[] = [];
 
-	const frontier: CellType[] = [];
+    const addFrontier = (cell: CellType) => {
+        for (const { dr, dc } of longDirections) {
+            const r = cell.row + dr;
+            const c = cell.col + dc;
+            if (
+                isInBounds(r, c, rows, cols) &&
+                newGrid[r][c].state === 'wall'
+            ) {
+                frontier.push(newGrid[r][c]);
+            }
+        }
+    };
 
-	getNeighbors<CellType>(newGrid, start, rows, cols, isDiagonal).forEach(
-		(neighbor) => {
-			if (neighbor.state === "wall") frontier.push(neighbor);
-		},
-	);
+    addFrontier(start);
 
-	while (frontier.length !== 0) {
-		const randomIndex = Math.floor(Math.random() * frontier.length);
-		const [current] = frontier.splice(randomIndex, 1);
+    while (frontier.length > 0) {
+        const randomIndex = Math.floor(Math.random() * frontier.length);
+        const [current] = frontier.splice(randomIndex, 1);
 
-		const neighbors = getNeighbors<CellType>(
-			newGrid,
-			current,
-			rows,
-			cols,
-			false,
-		);
-		const paths = neighbors.filter(
-			(neighbor) => neighbor.state === "unvisited",
-		);
+        const neighbors: CellType[] = [];
 
-		if (paths.length === 1) {
-			current.state = "unvisited";
-			wallCreation.push({ row: current.row, col: current.col });
+        for (const { dr, dc } of longDirections) {
+            const r = current.row + dr;
+            const c = current.col + dc;
+            if (
+                isInBounds(r, c, rows, cols) &&
+                newGrid[r][c].state === 'unvisited'
+            ) {
+                neighbors.push(newGrid[r][c]);
+            }
+        }
 
-			neighbors.forEach((neighbor) => {
-				if (neighbor.state === "wall" && !frontier.includes(neighbor))
-					frontier.push(neighbor);
-			});
-		}
-	}
-	return wallCreation;
+        if (neighbors.length === 1) {
+            const next = neighbors[0];
+
+            const wallRow = (current.row + next.row) / 2;
+            const wallCol = (current.col + next.col) / 2;
+
+            newGrid[wallRow][wallCol].state = 'unvisited';
+            newGrid[current.row][current.col].state = 'unvisited';
+
+            wallCreation.push(
+                { row: wallRow, col: wallCol },
+                { row: current.row, col: current.col }
+            );
+
+            addFrontier(current);
+        }
+    }
+    return wallCreation;
 };

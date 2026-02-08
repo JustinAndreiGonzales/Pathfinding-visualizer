@@ -1,187 +1,204 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { createNewGrid } from "../utilities/createNewGrid";
-import { getGridDimension } from "../utilities/getGridDimension";
-import { useDijkstra } from "../algorithms/pathfinding/dijkstra";
-import type { CellIndex, CellType } from "../types";
-import { primMazeGenerator } from "../algorithms/mazeGenerator/prims";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { createNewGrid } from '../utilities/createNewGrid';
+import { getGridDimension } from '../utilities/getGridDimension';
+import { useDijkstra } from '../algorithms/pathfinding/dijkstra';
+import type { CellIndex, CellType, Stats } from '../types';
+import { primMazeGenerator } from '../algorithms/mazeGenerator/prims';
+import { useRecursiveBacktracker } from '../algorithms/mazeGenerator/recursiveBacktracker';
 
 export const usePathfindingVisualizer = (
-	currGridSize: string,
-	isDiagonal: boolean,
-	currAlgo: string,
-	speed: number,
+    currGridSize: string,
+    isDiagonal: boolean,
+    currAlgo: string,
+    speed: number
 ) => {
-	const [rows, cols] = getGridDimension(currGridSize);
-	const [maze, setMaze] = useState(() =>
-		createNewGrid(rows, cols, "unvisited"),
-	);
-	const [startCell, setStartCell] = useState<CellType | null>(null);
-	const [endCell, setEndCell] = useState<CellType | null>(null);
+    const [rows, cols] = getGridDimension(currGridSize);
+    const [maze, setMaze] = useState(() =>
+        createNewGrid(rows, cols, 'unvisited')
+    );
+    const [startCell, setStartCell] = useState<CellType | null>(null);
+    const [endCell, setEndCell] = useState<CellType | null>(null);
 
-	const speedRef = useRef(speed);
+    const [stats, setStats] = useState<Stats>({
+        nodes: 0,
+        pathLength: 0,
+        time: 0,
+    });
 
-	const handleGridSizeChange = (newGridSize: string) => {
-		const [rows, cols] = getGridDimension(newGridSize);
-		setMaze(createNewGrid(rows, cols, "unvisited"));
-	};
+    const speedRef = useRef(speed);
 
-	const sleep = (ms: number) =>
-		new Promise<void>((resolve) => setTimeout(resolve, ms));
+    const handleGridSizeChange = (newGridSize: string) => {
+        const [rows, cols] = getGridDimension(newGridSize);
+        setMaze(createNewGrid(rows, cols, 'unvisited'));
+    };
 
-	const animate = async (cellsVisited: CellIndex[], path: CellIndex[]) => {
-		for (const node of cellsVisited) {
-			setMaze((prev) => {
-				const cell = prev[node.row][node.col];
-				if (cell.state === "start" || cell.state === "end") return prev;
-				const next = prev.map((r) => r.map((c) => ({ ...c })));
-				next[node.row][node.col].state = "visited";
-				return next;
-			});
-			await sleep(100 - speedRef.current);
-		}
-		for (const node of path) {
-			setMaze((prev) => {
-				const cell = prev[node.row][node.col];
-				if (cell.state === "start" || cell.state === "end") return prev;
-				const next = prev.map((r) => r.map((c) => ({ ...c })));
-				next[node.row][node.col].state = "path";
-				return next;
-			});
-			await sleep(100 - speedRef.current);
-		}
-	};
+    const sleep = (ms: number) =>
+        new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-	const animateMazeGeneration = async (paths: CellIndex[]) => {
-		setMaze(createNewGrid(rows, cols, "wall"));
+    const animate = async (cellsVisited: CellIndex[], path: CellIndex[]) => {
+        for (const [index, node] of cellsVisited.entries()) {
+            setMaze((prev) => {
+                const cell = prev[node.row][node.col];
+                if (cell.state === 'start' || cell.state === 'end') return prev;
+                const next = prev.map((r) => r.map((c) => ({ ...c })));
+                next[node.row][node.col].state = 'visited';
+                return next;
+            });
+            setStats((prev) => ({ ...prev, nodes: index + 1 }));
+            await sleep(100 - speedRef.current);
+        }
+        for (const [index, node] of path.entries()) {
+            setMaze((prev) => {
+                const cell = prev[node.row][node.col];
+                if (cell.state === 'start' || cell.state === 'end') return prev;
+                const next = prev.map((r) => r.map((c) => ({ ...c })));
+                next[node.row][node.col].state = 'path';
+                return next;
+            });
+            setStats((prev) => ({ ...prev, pathLength: index + 1 }));
+            await sleep(100 - speedRef.current);
+        }
+    };
 
-		for (const { row, col } of paths) {
-			setMaze((prev) => {
-				const next = prev.map((r) => r.map((c) => ({ ...c })));
-				next[row][col].state = "unvisited";
-				return next;
-			});
-			await sleep(100 - speedRef.current);
-		}
-	};
+    const animateMazeGeneration = async (paths: CellIndex[]) => {
+        setMaze(createNewGrid(rows, cols, 'wall'));
 
-	const handleVisualize = () => {
-		if (startCell === null || endCell === null) return;
+        for (const { row, col } of paths) {
+            setMaze((prev) => {
+                const next = prev.map((r) => r.map((c) => ({ ...c })));
+                next[row][col].state = 'unvisited';
+                return next;
+            });
+            await sleep(100 - speedRef.current);
+        }
+    };
 
-		const { cellsVisited, path } = useDijkstra(
-			maze,
-			startCell,
-			endCell,
-			isDiagonal,
-		);
+    const handleVisualize = () => {
+        if (startCell === null || endCell === null) return;
 
-		animate(cellsVisited, path);
-	};
+        const now = performance.now();
+        const { cellsVisited, path } = useDijkstra(
+            maze,
+            startCell,
+            endCell,
+            isDiagonal
+        );
+        const end = performance.now();
 
-	const handleClearPath = () => {
-		setMaze((prev) => {
-			return prev.map((row) =>
-				row.map((cell) =>
-					cell.state === "visited" || cell.state === "path"
-						? { ...cell, state: "unvisited" }
-						: { ...cell },
-				),
-			);
-		});
-	};
+        animate(cellsVisited, path);
+        setStats((prev) => ({ ...prev, time: end - now }));
+    };
 
-	const handleClearWalls = () => {
-		setMaze((prev) => {
-			return prev.map((row) =>
-				row.map((cell) =>
-					cell.state === "wall"
-						? { ...cell, state: "unvisited" }
-						: { ...cell },
-				),
-			);
-		});
-	};
+    const handleClearPath = () => {
+        setMaze((prev) => {
+            return prev.map((row) =>
+                row.map((cell) =>
+                    cell.state === 'visited' || cell.state === 'path'
+                        ? { ...cell, state: 'unvisited' }
+                        : { ...cell }
+                )
+            );
+        });
+    };
 
-	const handleResetBoard = () => {
-		handleGridSizeChange(currGridSize);
-		setStartCell(null);
-		setEndCell(null);
-	};
+    const handleClearWalls = () => {
+        setMaze((prev) => {
+            return prev.map((row) =>
+                row.map((cell) =>
+                    cell.state === 'wall'
+                        ? { ...cell, state: 'unvisited' }
+                        : { ...cell }
+                )
+            );
+        });
+    };
 
-	const handleGenerateRandomMaze = () => {
-		const path = primMazeGenerator(rows, cols, isDiagonal);
-		animateMazeGeneration(path);
-	};
-	const handleRecursiveDivision = () => {};
+    const handleResetBoard = () => {
+        handleGridSizeChange(currGridSize);
+        setStartCell(null);
+        setEndCell(null);
+    };
 
-	const handleGridOnClick = useCallback(
-		(row: number, col: number) => {
-			setMaze((prevMaze) => {
-				const next = prevMaze.map((r) => r.map((c) => ({ ...c })));
-				const cell = next[row][col];
+    const handleGenerateRandomMaze = () => {
+        const path = primMazeGenerator(rows, cols);
+        animateMazeGeneration(path);
+    };
+    const handleRecursiveDivision = () => {
+        const path = useRecursiveBacktracker(rows, cols);
+        console.log(path);
+        animateMazeGeneration(path);
+    };
 
-				// Start cell clicked: reset to unvisited, free start
-				if (cell.state === "start") {
-					cell.state = "unvisited";
-					// setHasStart(false);
-					setStartCell(null);
-					return next;
-				}
+    const handleGridOnClick = useCallback(
+        (row: number, col: number) => {
+            setMaze((prevMaze) => {
+                const next = prevMaze.map((r) => r.map((c) => ({ ...c })));
+                const cell = next[row][col];
 
-				// End cell clicked: reset to unvisited, free end
-				if (cell.state === "end") {
-					cell.state = "unvisited";
-					// setHasEnd(false);
-					setEndCell(null);
-					return next;
-				}
+                // Start cell clicked: reset to unvisited, free start
+                if (cell.state === 'start') {
+                    cell.state = 'unvisited';
+                    // setHasStart(false);
+                    setStartCell(null);
+                    return next;
+                }
 
-				setStartCell((prevStart) => {
-					if (!prevStart) {
-						cell.state = "start";
-						return { row, col, state: "start" };
-					}
-					return prevStart;
-				});
+                // End cell clicked: reset to unvisited, free end
+                if (cell.state === 'end') {
+                    cell.state = 'unvisited';
+                    // setHasEnd(false);
+                    setEndCell(null);
+                    return next;
+                }
 
-				setEndCell((prevEnd) => {
-					if (!prevEnd && cell.state !== "start") {
-						cell.state = "end";
-						return { row, col, state: "end" };
-					}
-					return prevEnd;
-				});
+                setStartCell((prevStart) => {
+                    if (!prevStart) {
+                        cell.state = 'start';
+                        return { row, col, state: 'start' };
+                    }
+                    return prevStart;
+                });
 
-				// Toggle walls if cell is unvisited/wall
-				if (cell.state === "unvisited") {
-					cell.state = "wall";
-				} else if (cell.state === "wall") {
-					cell.state = "unvisited";
-				}
+                setEndCell((prevEnd) => {
+                    if (!prevEnd && cell.state !== 'start') {
+                        cell.state = 'end';
+                        return { row, col, state: 'end' };
+                    }
+                    return prevEnd;
+                });
 
-				return next;
-			});
-		},
-		[setMaze],
-	);
+                // Toggle walls if cell is unvisited/wall
+                if (cell.state === 'unvisited') {
+                    cell.state = 'wall';
+                } else if (cell.state === 'wall') {
+                    cell.state = 'unvisited';
+                }
 
-	useEffect(() => {
-		handleGridSizeChange(currGridSize);
-	}, [currGridSize]);
+                return next;
+            });
+        },
+        [setMaze]
+    );
 
-	useEffect(() => {
-		speedRef.current = speed;
-	}, [speed]);
+    useEffect(() => {
+        handleGridSizeChange(currGridSize);
+    }, [currGridSize]);
 
-	return {
-		maze,
-		rows,
-		cols,
-		handleVisualize,
-		handleClearPath,
-		handleClearWalls,
-		handleResetBoard,
-		handleGenerateRandomMaze,
-		handleRecursiveDivision,
-		handleGridOnClick,
-	};
+    useEffect(() => {
+        speedRef.current = speed;
+    }, [speed]);
+
+    return {
+        maze,
+        rows,
+        cols,
+        stats,
+        handleVisualize,
+        handleClearPath,
+        handleClearWalls,
+        handleResetBoard,
+        handleGenerateRandomMaze,
+        handleRecursiveDivision,
+        handleGridOnClick,
+    };
 };

@@ -26,6 +26,7 @@ export const VisualizerProvider = ({ children }: { children: ReactNode }) => {
         maze,
         rows,
         cols,
+        stats,
         handleVisualize,
         handleClearPath,
         handleClearWalls,
@@ -53,6 +54,7 @@ export const VisualizerProvider = ({ children }: { children: ReactNode }) => {
     };
     const controlsValues = {
         speed,
+        stats,
         setSpeed,
         handleVisualize,
         handleClearPath,

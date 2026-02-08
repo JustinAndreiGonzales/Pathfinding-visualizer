@@ -1,7 +1,9 @@
 import { createContext } from 'react';
+import type { Stats } from '../types';
 
 type ControlsContextType = {
     speed: number;
+    stats: Stats;
     setSpeed: React.Dispatch<React.SetStateAction<number>>;
     handleVisualize: () => void;
     handleClearPath: () => void;
